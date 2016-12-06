@@ -87,11 +87,13 @@ class SearchEngine:
     def alpha_beta(self, cur_state, limit, cur_level, alpha, beta):
         """Alpha-beta pruning with limited depth. Leaves are evaluated by evaluation function."""
 
-        if cur_level == limit:
-            if cur_state.player == 1:   # MAX player
-                return cur_state.evaluate_state(cur_state)
-            else:   # MIN player
-                return -cur_state.evaluate_state(cur_state)
+        # Evaluate current state.
+        if cur_state.player == 1:  # MAX player
+            cur_value = cur_state.evaluate_state(cur_state)
+        else:  # MIN player
+            cur_value = -cur_state.evaluate_state(cur_state)
+        if cur_level == limit or abs(cur_value) == 100:
+            return cur_value
         else:
             child_list = cur_state.successors()
             if cur_state.player == 1:   # MAX player
