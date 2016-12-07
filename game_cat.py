@@ -27,6 +27,10 @@ def main():
             action_str = input("Please enter your move: ")
             action_lst = action_str.split()
             action = (int(action_lst[0]), int(action_lst[1]))
+            while action not in state.available_moves:
+                action_str = input("NOT a valid move, please re-enter: ")
+                action_lst = action_str.split()
+                action = (int(action_lst[0]), int(action_lst[1]))
             state = State(action, state)
         print("score: "+str(search_engine.evaluate_state(state)))
         state.print_board()
