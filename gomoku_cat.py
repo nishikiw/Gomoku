@@ -1,4 +1,6 @@
 import math
+import heapq
+import random
 
 size = 15
 
@@ -67,7 +69,8 @@ class State:
         for (x, y) in self.available_moves:
             if (y >= self.left - 3) and (y <= self.right + 3) and (x >= self.top - 3) and (x <= self.bottom + 3):
                 child = State((x, y), self)
-                children.append(child)
+                heap_key = -evaluate_state(child)-random.random()
+                heapq.heappush(children, (heap_key, child))
         return children
 
     def print_board(self):
@@ -106,16 +109,17 @@ class SearchEngine:
         max_val = -math.inf
         min_level = math.inf
         final_state = None
-        for c in children:
-            c_val, c_level, c_state = self.alpha_beta(c, 1, 1, -math.inf, math.inf)
+        for i in range(len(children)):
+            c = heapq.heappop(children)
+            c_val, c_level, c_state = self.alpha_beta(c[1], 3, 1, -math.inf, math.inf)
             if (c_val > max_val) or (c_val == max_val and c_level < min_level):
                 max_val = c_val
                 min_level = c_level
-                next_move = c.action
+                next_move = c[1].action
                 final_state = c_state
-        #print("---------------------------------------")
-        #print("value = "+str(max_val)+", level = "+str(min_level))
-        #final_state.print_board()
+        print("---------------------------------------")
+        print("value = "+str(max_val)+", level = "+str(min_level))
+        final_state.print_board()
         return next_move
 
     def alpha_beta(self, cur_state, limit, cur_level, alpha, beta):
@@ -133,8 +137,9 @@ class SearchEngine:
             child_list = cur_state.successors()
             final_state = None
             if cur_state.player == 1:  # MAX player
-                for c in child_list:
-                    (c_alpha, c_level, c_state) = self.alpha_beta(c, limit, cur_level + 1, alpha, beta)
+                for i in range(len(child_list)):
+                    c = heapq.heappop(child_list)
+                    (c_alpha, c_level, c_state) = self.alpha_beta(c[1], limit, cur_level + 1, alpha, beta)
                     # print("HERE: "+str(c_alpha)+" "+str(c_level))
                     if (c_alpha > alpha) or (c_alpha == alpha and c_level < min_level):
                         alpha = c_alpha
@@ -144,8 +149,9 @@ class SearchEngine:
                         break
                 return (alpha, min_level, final_state)
             else:  # MIN player
-                for c in child_list:
-                    (c_beta, c_level, c_state) = self.alpha_beta(c, limit, cur_level + 1, alpha, beta)
+                for i in range(len(child_list)):
+                    c = heapq.heappop(child_list)
+                    (c_beta, c_level, c_state) = self.alpha_beta(c[1], limit, cur_level + 1, alpha, beta)
                     # print("c_beta = " + str(c_beta) + ", beta = " + str(beta))
                     if (c_beta < beta) or (c_beta == beta and c_level < min_level):
                         beta = c_beta
