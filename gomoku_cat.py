@@ -97,7 +97,6 @@ class SearchEngine:
         """
 
         children = cur_state.successors()
-        print(len(children))
         next_move = None
         max_val = -math.inf
         for c in children:
@@ -162,11 +161,11 @@ class SearchEngine:
         # Calculate the number of pieces in a roll on a vertical line, and how many sides are blocked.
         vertical_blocked_1 = 0
         vertical_blocked_2 = 0
-        if y < 5:
+        if x < 5:
             vertical_blocked_1 = 1
         for i in range(1, min(5, x)):
-            if (x, y - i) in occupied:
-                if occupied[(x, y - i)] == player:
+            if (x - i, y) in occupied:
+                if occupied[(x - i, y)] == player:
                     vertical_num += 1
                 else:
                     vertical_blocked_1 = 1
@@ -174,11 +173,11 @@ class SearchEngine:
             else:
                 break
 
-        if size - y < 4:
+        if size - x < 4:
             vertical_blocked_2 = 1
-        for i in range(1, min(5, size - y + 1)):
-            if (x, y + i) in occupied:
-                if occupied[(x, y + i)] == player:
+        for i in range(1, min(5, size - x + 1)):
+            if (x + i, y) in occupied:
+                if occupied[(x + i, y)] == player:
                     vertical_num += 1
                 else:
                     vertical_blocked_2 = 1
@@ -194,11 +193,11 @@ class SearchEngine:
         # Calculate the number of pieces in a roll on a horizontal line, and how many sides are blocked.
         horizontal_blocked_1 = 0
         horizontal_blocked_2 = 0
-        if x < 5:
+        if y < 5:
             horizontal_blocked_1 = 1
-        for i in range(1, min(5, x)):
-            if (x - i, y) in occupied:
-                if occupied[(x - i, y)] == player:
+        for i in range(1, min(5, y)):
+            if (x, y-i) in occupied:
+                if occupied[(x, y - i)] == player:
                     horizontal_num += 1
                 else:
                     horizontal_blocked_1 = 1
@@ -206,11 +205,11 @@ class SearchEngine:
             else:
                 break
 
-        if size - x < 4:
+        if size - y < 4:
             horizontal_blocked_2 = 1
-        for i in range(1, min(5, size - x + 1)):
-            if (x + i, y) in occupied:
-                if occupied[(x + i, y)] == player:
+        for i in range(1, min(5, size - y + 1)):
+            if (x, y + i) in occupied:
+                if occupied[(x, y + i)] == player:
                     horizontal_num += 1
                 else:
                     horizontal_blocked_2 = 1
