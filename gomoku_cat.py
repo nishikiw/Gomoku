@@ -99,38 +99,50 @@ class SearchEngine:
         children = cur_state.successors()
         next_move = None
         max_val = -math.inf
+        print(max_val)
+        min_level = math.inf
         for c in children:
-            c_val = self.alpha_beta(c, 3, 1, -math.inf, math.inf)
-            if c_val > max_val:
+            c_val, c_level = self.alpha_beta(c, 3, 1, -math.inf, math.inf, math.inf)
+            if (c_val > max_val) or (c_val == max_val and c_level < min_level):
                 max_val = c_val
+                min_level = c_level
                 next_move = c.action
+            print(str(c_val) + " " + str(c.action))
         return next_move
 
-    def alpha_beta(self, cur_state, limit, cur_level, alpha, beta):
+    def alpha_beta(self, cur_state, limit, cur_level, alpha, beta, min_level):
         """Alpha-beta pruning with limited depth. Leaves are evaluated by evaluation function."""
 
         # Evaluate current state.
-        if cur_state.player == 1:  # MAX player
-            cur_value = -self.evaluate_state(cur_state)
-        else:  # MIN player
+        if cur_state.action_player == 1:  # pre_player is MAX player
             cur_value = self.evaluate_state(cur_state)
+        else:  # pre_player is MIN player
+            cur_value = -self.evaluate_state(cur_state)
 
         if cur_level == limit or abs(cur_value) == 100:
-            return cur_value
+            return (cur_value, cur_level)
         else:
             child_list = cur_state.successors()
             if cur_state.player == 1:  # MAX player
                 for c in child_list:
-                    alpha = max(alpha, self.alpha_beta(c, limit, cur_level + 1, alpha, beta))
+                    (c_alpha, c_level) = self.alpha_beta(c, limit, cur_level + 1, alpha, beta, min_level)
+                    #print("HERE: "+str(c_alpha)+" "+str(c_level))
+                    if (c_alpha > alpha) or (c_alpha == alpha and c_level < min_level):
+                        alpha = c_alpha
+                        min_level = c_level
                     if beta <= alpha:
                         break
-                return alpha
+                return (alpha, min_level)
             else:  # MIN player
                 for c in child_list:
-                    beta = min(beta, self.alpha_beta(c, limit, cur_level + 1, alpha, beta))
+                    (c_beta, c_level) = self.alpha_beta(c, limit, cur_level + 1, alpha, beta, min_level)
+                    #print("THERE: " + str(c_beta) + " " + str(c_level))
+                    if (c_beta < alpha) or (c_beta == beta and c_level < min_level):
+                        beta = c_beta
+                        min_level = c_level
                     if beta <= alpha:
                         break
-                return beta
+                return (beta, min_level)
 
     def get_winner(self, state):
         """If there is a winner for state, return the winner. Else if it's terminal state and no player,
