@@ -60,18 +60,30 @@ class State:
                 self.right = action[1]
             else:
                 self.right = pre_state.right
-        self.value = evaluate_state(self)
+        if self.action_player == 1:
+            self.value = evaluate_state(self)
+        else:
+            self.value = -evaluate_state(self)
 
     def successors(self):
         """Get successor states."""
 
-        children = []
-        for (x, y) in self.available_moves:
-            if (y >= self.left - 3) and (y <= self.right + 3) and (x >= self.top - 3) and (x <= self.bottom + 3):
-                child = State((x, y), self)
-                heap_key = -evaluate_state(child)-random.random()
-                heapq.heappush(children, (heap_key, child))
-        return children
+        if self.player == 1:    # MAX HEAP
+            children = []
+            for (x, y) in self.available_moves:
+                if (y >= self.left - 3) and (y <= self.right + 3) and (x >= self.top - 3) and (x <= self.bottom + 3):
+                    child = State((x, y), self)
+                    heap_key = -child.value-random.random()
+                    heapq.heappush(children, (heap_key, child))
+            return children
+        else:   #MIN HEAP:
+            children = []
+            for (x, y) in self.available_moves:
+                if (y >= self.left - 3) and (y <= self.right + 3) and (x >= self.top - 3) and (x <= self.bottom + 3):
+                    child = State((x, y), self)
+                    heap_key = child.value - random.random()
+                    heapq.heappush(children, (heap_key, child))
+            return children
 
     def print_board(self):
         """Print the board of current state."""
@@ -104,62 +116,49 @@ class SearchEngine:
         AI is always player 1, so we only need to calculate for MAX.
         """
 
-        children = cur_state.successors()
-        next_move = None
-        max_val = -math.inf
-        min_level = math.inf
-        final_state = None
-        for i in range(len(children)):
-            c = heapq.heappop(children)
-            c_val, c_level, c_state = self.alpha_beta(c[1], 3, 1, -math.inf, math.inf)
-            if (c_val > max_val) or (c_val == max_val and c_level < min_level):
-                max_val = c_val
-                min_level = c_level
-                next_move = c[1].action
-                final_state = c_state
-        print("---------------------------------------")
-        print("value = "+str(max_val)+", level = "+str(min_level))
+        alpha, final_state, min_level, action_took = self.alpha_beta(cur_state, 2, 1, -math.inf, math.inf, math.inf)
+        print("-----------------------------------------")
+        print("value = "+str(alpha)+", min_level = "+str(min_level))
         final_state.print_board()
-        return next_move
+        return action_took
 
-    def alpha_beta(self, cur_state, limit, cur_level, alpha, beta):
+
+    def alpha_beta(self, cur_state, limit, cur_level, alpha, beta, min_level):
         """Alpha-beta pruning with limited depth. Leaves are evaluated by evaluation function."""
 
         # Evaluate current state.
-        if cur_state.action_player == 1:  # pre_player is MAX player
-            cur_value = cur_state.value
-        else:  # pre_player is MIN player
-            cur_value = -cur_state.value
-
-        if cur_level == limit or abs(cur_value) == 200:
-            return (cur_value, cur_level, cur_state)
+        if cur_level == limit or abs(cur_state.value) == 100:
+            return cur_state.value, cur_state, cur_level, None
         else:
             child_list = cur_state.successors()
             final_state = None
+            action_took = None
             if cur_state.player == 1:  # MAX player
                 for i in range(len(child_list)):
                     c = heapq.heappop(child_list)
-                    (c_alpha, c_level, c_state) = self.alpha_beta(c[1], limit, cur_level + 1, alpha, beta)
+                    (c_alpha, c_state, c_level, action) = self.alpha_beta(c[1], limit, cur_level + 1, alpha, beta, min_level)
                     # print("HERE: "+str(c_alpha)+" "+str(c_level))
                     if (c_alpha > alpha) or (c_alpha == alpha and c_level < min_level):
                         alpha = c_alpha
-                        min_level = c_level
                         final_state = c_state
+                        action_took = c[1].action
+                        min_level = c_level
                     if beta <= alpha:
                         break
-                return (alpha, min_level, final_state)
+                return alpha, final_state, min_level, action_took
             else:  # MIN player
                 for i in range(len(child_list)):
                     c = heapq.heappop(child_list)
-                    (c_beta, c_level, c_state) = self.alpha_beta(c[1], limit, cur_level + 1, alpha, beta)
+                    (c_beta, c_state, c_level, action) = self.alpha_beta(c[1], limit, cur_level + 1, alpha, beta, min_level)
                     # print("c_beta = " + str(c_beta) + ", beta = " + str(beta))
                     if (c_beta < beta) or (c_beta == beta and c_level < min_level):
                         beta = c_beta
-                        min_level = c_level
                         final_state = c_state
+                        action_took = c[1].action
+                        min_level = c_level
                     if beta <= alpha:
                         break
-                return (beta, min_level, final_state)
+                return beta, final_state, min_level, action_took
 
 def get_winner(state):
     """If there is a winner for state, return the winner. Else if it's terminal state and no player,
@@ -177,10 +176,7 @@ def evaluate_state(state):
 
     my_score = get_action_score(state.action[0], state.action[1], state.action_player, state.occupied)
     other_score = get_action_score(state.action[0], state.action[1], state.player, state.occupied)
-    if my_score == 100:
-        return 200
-    else:
-        return max(my_score, other_score)
+    return max(my_score, other_score)
 
 def get_action_score(x, y, player, occupied):
     """Input a state, return the value of the state."""
