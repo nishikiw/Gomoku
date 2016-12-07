@@ -99,7 +99,6 @@ class SearchEngine:
         children = cur_state.successors()
         next_move = None
         max_val = -math.inf
-        print(max_val)
         min_level = math.inf
         for c in children:
             c_val, c_level = self.alpha_beta(c, 3, 1, -math.inf, math.inf, math.inf)
@@ -107,7 +106,7 @@ class SearchEngine:
                 max_val = c_val
                 min_level = c_level
                 next_move = c.action
-            print(str(c_val) + " " + str(c.action))
+            #print(str(c_val) + " " + str(c.action))
         return next_move
 
     def alpha_beta(self, cur_state, limit, cur_level, alpha, beta, min_level):
@@ -136,8 +135,8 @@ class SearchEngine:
             else:  # MIN player
                 for c in child_list:
                     (c_beta, c_level) = self.alpha_beta(c, limit, cur_level + 1, alpha, beta, min_level)
-                    #print("THERE: " + str(c_beta) + " " + str(c_level))
-                    if (c_beta < alpha) or (c_beta == beta and c_level < min_level):
+                    #print("c_beta = " + str(c_beta) + ", beta = " + str(beta))
+                    if (c_beta < beta) or (c_beta == beta and c_level < min_level):
                         beta = c_beta
                         min_level = c_level
                     if beta <= alpha:
