@@ -1,6 +1,7 @@
 from gomoku_cat import State
 from gomoku_cat import SearchEngine
-
+from gomoku_cat import evaluate_state
+from gomoku_cat import get_winner
 
 def main():
     print("Welcome to Gomoku!")
@@ -19,7 +20,7 @@ def main():
 
     state.print_board()
     search_engine = SearchEngine()
-    while search_engine.get_winner(state) == -1:
+    while get_winner(state) == -1:
         if state.player == 1:   # AI need to make next move
             action = search_engine.next_move(state)
             state = State(action, state)
@@ -32,9 +33,9 @@ def main():
                 action_lst = action_str.split()
                 action = (int(action_lst[0]), int(action_lst[1]))
             state = State(action, state)
-        print("score: "+str(search_engine.evaluate_state(state)))
+        print("score: "+str(evaluate_state(state)))
         state.print_board()
-    winner = search_engine.get_winner(state)
+    winner = get_winner(state)
     if winner == 1:
         print("Game end. Please try again.")
     elif winner == 2:

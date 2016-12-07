@@ -58,6 +58,7 @@ class State:
                 self.right = action[1]
             else:
                 self.right = pre_state.right
+        self.value = evaluate_state(self)
 
     def successors(self):
         """Get successor states."""
@@ -77,10 +78,14 @@ class State:
             for j in range(size):
                 if (i + 1, j + 1) in self.occupied:
                     player = self.occupied[(i + 1, j + 1)]
+                    if (i+1, j+1) == self.action:
+                        line += "\033[91m"
                     if player == 1:
                         line += "X"
                     else:
                         line += "O"
+                    if (i+1, j+1) == self.action:
+                        line += "\033[0m"
                 else:
                     line += " "
                 line += "|"
@@ -118,11 +123,11 @@ class SearchEngine:
 
         # Evaluate current state.
         if cur_state.action_player == 1:  # pre_player is MAX player
-            cur_value = self.evaluate_state(cur_state)
+            cur_value = cur_state.value
         else:  # pre_player is MIN player
-            cur_value = -self.evaluate_state(cur_state)
+            cur_value = -cur_state.value
 
-        if cur_level == limit or abs(cur_value) == 100:
+        if cur_level == limit or abs(cur_value) == 200:
             return (cur_value, cur_level, cur_state)
         else:
             child_list = cur_state.successors()
@@ -150,183 +155,186 @@ class SearchEngine:
                         break
                 return (beta, min_level, final_state)
 
-    def get_winner(self, state):
-        """If there is a winner for state, return the winner. Else if it's terminal state and no player,
-        return 0. Else return -1."""
-        state_val = self.get_action_score(state.action[0], state.action[1], state.action_player, state.occupied)
-        if state_val == 100:
-            return state.action_player
-        elif len(state.available_moves) == 0:
-            return 0
+def get_winner(state):
+    """If there is a winner for state, return the winner. Else if it's terminal state and no player,
+    return 0. Else return -1."""
+    state_val = get_action_score(state.action[0], state.action[1], state.action_player, state.occupied)
+    if state_val == 100:
+        return state.action_player
+    elif len(state.available_moves) == 0:
+        return 0
+    else:
+        return -1
+
+def evaluate_state(state):
+    """Input a state, return the value of the state."""
+
+    my_score = get_action_score(state.action[0], state.action[1], state.action_player, state.occupied)
+    other_score = get_action_score(state.action[0], state.action[1], state.player, state.occupied)
+    if my_score == 100:
+        return 200
+    else:
+        return max(my_score, other_score)
+
+def get_action_score(x, y, player, occupied):
+    """Input a state, return the value of the state."""
+
+    vertical_num = 1
+    horizontal_num = 1
+    diagonal_num = 1
+    antidiagonal_num = 1
+
+    dictionary = {}
+
+    # Calculate the number of pieces in a roll on a vertical line, and how many sides are blocked.
+    vertical_blocked_1 = 0
+    vertical_blocked_2 = 0
+    if x < 5:
+        vertical_blocked_1 = 1
+    for i in range(1, min(5, x)):
+        if (x - i, y) in occupied:
+            if occupied[(x - i, y)] == player:
+                vertical_num += 1
+            else:
+                vertical_blocked_1 = 1
+                break
         else:
-            return -1
+            break
 
-    def evaluate_state(self, state):
-        """Input a state, return the value of the state."""
-
-        my_score = self.get_action_score(state.action[0], state.action[1], state.action_player, state.occupied)
-        other_score = self.get_action_score(state.action[0], state.action[1], state.player, state.occupied)
-        return my_score + other_score
-
-    def get_action_score(self, x, y, player, occupied):
-        """Input a state, return the value of the state."""
-
-        vertical_num = 1
-        horizontal_num = 1
-        diagonal_num = 1
-        antidiagonal_num = 1
-
-        dictionary = {}
-
-        # Calculate the number of pieces in a roll on a vertical line, and how many sides are blocked.
-        vertical_blocked_1 = 0
-        vertical_blocked_2 = 0
-        if x < 5:
-            vertical_blocked_1 = 1
-        for i in range(1, min(5, x)):
-            if (x - i, y) in occupied:
-                if occupied[(x - i, y)] == player:
-                    vertical_num += 1
-                else:
-                    vertical_blocked_1 = 1
-                    break
+    if size - x < 4:
+        vertical_blocked_2 = 1
+    for i in range(1, min(5, size - x + 1)):
+        if (x + i, y) in occupied:
+            if occupied[(x + i, y)] == player:
+                vertical_num += 1
             else:
+                vertical_blocked_2 = 1
                 break
-
-        if size - x < 4:
-            vertical_blocked_2 = 1
-        for i in range(1, min(5, size - x + 1)):
-            if (x + i, y) in occupied:
-                if occupied[(x + i, y)] == player:
-                    vertical_num += 1
-                else:
-                    vertical_blocked_2 = 1
-                    break
-            else:
-                break
-
-        if (vertical_num, vertical_blocked_1 + vertical_blocked_2) in dictionary:
-            dictionary[(vertical_num, vertical_blocked_1 + vertical_blocked_2)] += 1
         else:
-            dictionary[(vertical_num, vertical_blocked_1 + vertical_blocked_2)] = 1
+            break
 
-        # Calculate the number of pieces in a roll on a horizontal line, and how many sides are blocked.
-        horizontal_blocked_1 = 0
-        horizontal_blocked_2 = 0
-        if y < 5:
-            horizontal_blocked_1 = 1
-        for i in range(1, min(5, y)):
-            if (x, y - i) in occupied:
-                if occupied[(x, y - i)] == player:
-                    horizontal_num += 1
-                else:
-                    horizontal_blocked_1 = 1
-                    break
+    if (vertical_num, vertical_blocked_1 + vertical_blocked_2) in dictionary:
+        dictionary[(vertical_num, vertical_blocked_1 + vertical_blocked_2)] += 1
+    else:
+        dictionary[(vertical_num, vertical_blocked_1 + vertical_blocked_2)] = 1
+
+    # Calculate the number of pieces in a roll on a horizontal line, and how many sides are blocked.
+    horizontal_blocked_1 = 0
+    horizontal_blocked_2 = 0
+    if y < 5:
+        horizontal_blocked_1 = 1
+    for i in range(1, min(5, y)):
+        if (x, y - i) in occupied:
+            if occupied[(x, y - i)] == player:
+                horizontal_num += 1
             else:
+                horizontal_blocked_1 = 1
                 break
-
-        if size - y < 4:
-            horizontal_blocked_2 = 1
-        for i in range(1, min(5, size - y + 1)):
-            if (x, y + i) in occupied:
-                if occupied[(x, y + i)] == player:
-                    horizontal_num += 1
-                else:
-                    horizontal_blocked_2 = 1
-                    break
-            else:
-                break
-
-        if (horizontal_num, horizontal_blocked_1 + horizontal_blocked_2) in dictionary:
-            dictionary[(horizontal_num, horizontal_blocked_1 + horizontal_blocked_2)] += 1
         else:
-            dictionary[(horizontal_num, horizontal_blocked_1 + horizontal_blocked_2)] = 1
+            break
 
-        # Calculate the number of pieces in a roll through the diagonal, and how many sides are blocked.
-        diagonal_blocked_1 = 0
-        diagonal_blocked_2 = 0
-        if x < 5 or y < 5:
-            diagonal_blocked_1 = 1
-        for i in range(1, min(5, x, y)):
-            if (x - i, y - i) in occupied:
-                if occupied[(x - i, y - i)] == player:
-                    diagonal_num += 1
-                else:
-                    diagonal_blocked_1 = 1
-                    break
+    if size - y < 4:
+        horizontal_blocked_2 = 1
+    for i in range(1, min(5, size - y + 1)):
+        if (x, y + i) in occupied:
+            if occupied[(x, y + i)] == player:
+                horizontal_num += 1
             else:
+                horizontal_blocked_2 = 1
                 break
-
-        if size - x < 4 or size - y < 4:
-            diagonal_blocked_2 = 1
-        for i in range(1, min(5, size - x + 1, size - y + 1)):
-            if (x + i, y + i) in occupied:
-                if occupied[(x + i, y + i)] == player:
-                    diagonal_num += 1
-                else:
-                    diagonal_blocked_2 = 1
-                    break
-            else:
-                break
-
-        if (diagonal_num, diagonal_blocked_1 + diagonal_blocked_2) in dictionary:
-            dictionary[(diagonal_num, diagonal_blocked_1 + diagonal_blocked_2)] += 1
         else:
-            dictionary[(diagonal_num, diagonal_blocked_1 + diagonal_blocked_2)] = 1
+            break
 
-        # Calculate the number of pieces in a roll through the antidiagonal, and how many sides are blocked.
-        antidiagonal_blocked_1 = 0
-        antidiagonal_blocked_2 = 0
-        if size - x < 4 or y < 5:
-            antidiagonal_blocked_1 = 1
-        for i in range(1, min(5, size - x + 1, y)):
-            if (x + i, y - i) in occupied:
-                if occupied[(x + i, y - i)] == player:
-                    antidiagonal_num += 1
-                else:
-                    antidiagonal_blocked_1 = 1
-                    break
+    if (horizontal_num, horizontal_blocked_1 + horizontal_blocked_2) in dictionary:
+        dictionary[(horizontal_num, horizontal_blocked_1 + horizontal_blocked_2)] += 1
+    else:
+        dictionary[(horizontal_num, horizontal_blocked_1 + horizontal_blocked_2)] = 1
+
+    # Calculate the number of pieces in a roll through the diagonal, and how many sides are blocked.
+    diagonal_blocked_1 = 0
+    diagonal_blocked_2 = 0
+    if x < 5 or y < 5:
+        diagonal_blocked_1 = 1
+    for i in range(1, min(5, x, y)):
+        if (x - i, y - i) in occupied:
+            if occupied[(x - i, y - i)] == player:
+                diagonal_num += 1
             else:
+                diagonal_blocked_1 = 1
                 break
+        else:
+            break
 
-        if x < 5 or size - y < 4:
-            antidiagonal_blocked_2 = 1
-        for i in range(1, min(5, x, size - y + 1)):
-            if (x - i, y + i) in occupied:
-                if occupied[(x - i, y + i)] == player:
-                    antidiagonal_num += 1
-                else:
-                    antidiagonal_blocked_2 = 1
-                    break
+    if size - x < 4 or size - y < 4:
+        diagonal_blocked_2 = 1
+    for i in range(1, min(5, size - x + 1, size - y + 1)):
+        if (x + i, y + i) in occupied:
+            if occupied[(x + i, y + i)] == player:
+                diagonal_num += 1
             else:
+                diagonal_blocked_2 = 1
                 break
-
-        if (antidiagonal_num, antidiagonal_blocked_1 + antidiagonal_blocked_2) in dictionary:
-            dictionary[(antidiagonal_num, antidiagonal_blocked_1 + antidiagonal_blocked_2)] += 1
         else:
-            dictionary[(antidiagonal_num, antidiagonal_blocked_1 + antidiagonal_blocked_2)] = 1
+            break
 
-        # Return the score
-        if ((5, 0) in dictionary) or ((5, 1) in dictionary) or ((5, 2) in dictionary):
-            return 100
-        elif ((4, 0) in dictionary) or ((4, 1) in dictionary and dictionary[(4, 1)] > 1) or (
-                        (4, 1) in dictionary and (3, 0) in dictionary):
-            return 90
-        elif (3, 0) in dictionary and dictionary[(3, 0)] > 1:
-            return 80
-        elif (3, 0) in dictionary and (3, 1) in dictionary:
-            return 70
-        elif (4, 1) in dictionary:
-            return 60
-        elif (3, 0) in dictionary:
-            return 50
-        elif (2, 0) in dictionary and dictionary[(2, 0)] > 1:
-            return 40
-        elif (3, 1) in dictionary:
-            return 30
-        elif (2, 0) in dictionary:
-            return 20
-        elif (2, 1) in dictionary:
-            return 10
+    if (diagonal_num, diagonal_blocked_1 + diagonal_blocked_2) in dictionary:
+        dictionary[(diagonal_num, diagonal_blocked_1 + diagonal_blocked_2)] += 1
+    else:
+        dictionary[(diagonal_num, diagonal_blocked_1 + diagonal_blocked_2)] = 1
+
+    # Calculate the number of pieces in a roll through the antidiagonal, and how many sides are blocked.
+    antidiagonal_blocked_1 = 0
+    antidiagonal_blocked_2 = 0
+    if size - x < 4 or y < 5:
+        antidiagonal_blocked_1 = 1
+    for i in range(1, min(5, size - x + 1, y)):
+        if (x + i, y - i) in occupied:
+            if occupied[(x + i, y - i)] == player:
+                antidiagonal_num += 1
+            else:
+                antidiagonal_blocked_1 = 1
+                break
         else:
-            return 0
+            break
+
+    if x < 5 or size - y < 4:
+        antidiagonal_blocked_2 = 1
+    for i in range(1, min(5, x, size - y + 1)):
+        if (x - i, y + i) in occupied:
+            if occupied[(x - i, y + i)] == player:
+                antidiagonal_num += 1
+            else:
+                antidiagonal_blocked_2 = 1
+                break
+        else:
+            break
+
+    if (antidiagonal_num, antidiagonal_blocked_1 + antidiagonal_blocked_2) in dictionary:
+        dictionary[(antidiagonal_num, antidiagonal_blocked_1 + antidiagonal_blocked_2)] += 1
+    else:
+        dictionary[(antidiagonal_num, antidiagonal_blocked_1 + antidiagonal_blocked_2)] = 1
+
+    # Return the score
+    if ((5, 0) in dictionary) or ((5, 1) in dictionary) or ((5, 2) in dictionary):
+        return 100
+    elif ((4, 0) in dictionary) or ((4, 1) in dictionary and dictionary[(4, 1)] > 1) or (
+                    (4, 1) in dictionary and (3, 0) in dictionary):
+        return 90
+    elif (3, 0) in dictionary and dictionary[(3, 0)] > 1:
+        return 80
+    elif (3, 0) in dictionary and (3, 1) in dictionary:
+        return 70
+    elif (4, 1) in dictionary:
+        return 60
+    elif (3, 0) in dictionary:
+        return 50
+    elif (2, 0) in dictionary and dictionary[(2, 0)] > 1:
+        return 40
+    elif (3, 1) in dictionary:
+        return 30
+    elif (2, 0) in dictionary:
+        return 20
+    elif (2, 1) in dictionary:
+        return 10
+    else:
+        return 0
