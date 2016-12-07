@@ -12,10 +12,10 @@ def main():
         action_str = input("Please enter a location (x and y separated by space in range [1, 15]. example: 1 3): ")
         action_lst = action_str.split()
         action = (int(action_lst[0]), int(action_lst[1]))
-        state = State(action, None, 1)
+        state = State(action, None, 2, 1)
     else:
         action = (8, 8)
-        state = State(action, None, 2)
+        state = State(action, None, 1, 2)
 
     state.print_board()
     search_engine = SearchEngine()

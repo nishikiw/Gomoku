@@ -71,20 +71,20 @@ class State:
 
     def print_board(self):
         """Print the board of current state."""
-
+        print("   1 2 3 4 5 6 7 8 9 0 1 2 3 4 5")
         for i in range(size):
-            str = "|"
+            line = str((i+1)%10)+" |"
             for j in range(size):
-                if (i+1, j+1) in self.occupied:
-                    player = self.occupied[(i+1, j+1)]
+                if (i + 1, j + 1) in self.occupied:
+                    player = self.occupied[(i + 1, j + 1)]
                     if player == 1:
-                        str += "X"
+                        line += "X"
                     else:
-                        str += "O"
+                        line += "O"
                 else:
-                    str += " "
-                str += "|"
-            print(str)
+                    line += " "
+                line += "|"
+            print(line)
         print("")
 
 
@@ -100,16 +100,20 @@ class SearchEngine:
         next_move = None
         max_val = -math.inf
         min_level = math.inf
+        final_state = None
         for c in children:
-            c_val, c_level = self.alpha_beta(c, 3, 1, -math.inf, math.inf, math.inf)
+            c_val, c_level, c_state = self.alpha_beta(c, 1, 1, -math.inf, math.inf)
             if (c_val > max_val) or (c_val == max_val and c_level < min_level):
                 max_val = c_val
                 min_level = c_level
                 next_move = c.action
-            #print(str(c_val) + " " + str(c.action))
+                final_state = c_state
+        #print("---------------------------------------")
+        #print("value = "+str(max_val)+", level = "+str(min_level))
+        #final_state.print_board()
         return next_move
 
-    def alpha_beta(self, cur_state, limit, cur_level, alpha, beta, min_level):
+    def alpha_beta(self, cur_state, limit, cur_level, alpha, beta):
         """Alpha-beta pruning with limited depth. Leaves are evaluated by evaluation function."""
 
         # Evaluate current state.
@@ -119,34 +123,37 @@ class SearchEngine:
             cur_value = -self.evaluate_state(cur_state)
 
         if cur_level == limit or abs(cur_value) == 100:
-            return (cur_value, cur_level)
+            return (cur_value, cur_level, cur_state)
         else:
             child_list = cur_state.successors()
+            final_state = None
             if cur_state.player == 1:  # MAX player
                 for c in child_list:
-                    (c_alpha, c_level) = self.alpha_beta(c, limit, cur_level + 1, alpha, beta, min_level)
-                    #print("HERE: "+str(c_alpha)+" "+str(c_level))
+                    (c_alpha, c_level, c_state) = self.alpha_beta(c, limit, cur_level + 1, alpha, beta)
+                    # print("HERE: "+str(c_alpha)+" "+str(c_level))
                     if (c_alpha > alpha) or (c_alpha == alpha and c_level < min_level):
                         alpha = c_alpha
                         min_level = c_level
+                        final_state = c_state
                     if beta <= alpha:
                         break
-                return (alpha, min_level)
+                return (alpha, min_level, final_state)
             else:  # MIN player
                 for c in child_list:
-                    (c_beta, c_level) = self.alpha_beta(c, limit, cur_level + 1, alpha, beta, min_level)
-                    #print("c_beta = " + str(c_beta) + ", beta = " + str(beta))
+                    (c_beta, c_level, c_state) = self.alpha_beta(c, limit, cur_level + 1, alpha, beta)
+                    # print("c_beta = " + str(c_beta) + ", beta = " + str(beta))
                     if (c_beta < beta) or (c_beta == beta and c_level < min_level):
                         beta = c_beta
                         min_level = c_level
+                        final_state = c_state
                     if beta <= alpha:
                         break
-                return (beta, min_level)
+                return (beta, min_level, final_state)
 
     def get_winner(self, state):
         """If there is a winner for state, return the winner. Else if it's terminal state and no player,
         return 0. Else return -1."""
-        state_val = self.evaluate_state(state)
+        state_val = self.get_action_score(state.action[0], state.action[1], state.action_player, state.occupied)
         if state_val == 100:
             return state.action_player
         elif len(state.available_moves) == 0:
@@ -157,10 +164,12 @@ class SearchEngine:
     def evaluate_state(self, state):
         """Input a state, return the value of the state."""
 
-        x = state.action[0]
-        y = state.action[1]
-        player = state.action_player
-        occupied = state.occupied
+        my_score = self.get_action_score(state.action[0], state.action[1], state.action_player, state.occupied)
+        other_score = self.get_action_score(state.action[0], state.action[1], state.player, state.occupied)
+        return my_score + other_score
+
+    def get_action_score(self, x, y, player, occupied):
+        """Input a state, return the value of the state."""
 
         vertical_num = 1
         horizontal_num = 1
@@ -207,7 +216,7 @@ class SearchEngine:
         if y < 5:
             horizontal_blocked_1 = 1
         for i in range(1, min(5, y)):
-            if (x, y-i) in occupied:
+            if (x, y - i) in occupied:
                 if occupied[(x, y - i)] == player:
                     horizontal_num += 1
                 else:
@@ -301,7 +310,7 @@ class SearchEngine:
         if ((5, 0) in dictionary) or ((5, 1) in dictionary) or ((5, 2) in dictionary):
             return 100
         elif ((4, 0) in dictionary) or ((4, 1) in dictionary and dictionary[(4, 1)] > 1) or (
-                (4, 1) in dictionary and (3, 0) in dictionary):
+                        (4, 1) in dictionary and (3, 0) in dictionary):
             return 90
         elif (3, 0) in dictionary and dictionary[(3, 0)] > 1:
             return 80
