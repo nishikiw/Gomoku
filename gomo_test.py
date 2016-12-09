@@ -168,9 +168,43 @@ def basic_evaluation_test10():
     print("passed basic_evaluation_test10\n")
     return 1
 
+## take the winning move
+def basic_next_step_test1():
+    action = (7, 6)
+    state = State(action, None, 2, 1)
+    search_engine = SearchEngine()
+    state.populate_states([(7, 3), (7, 4), (7, 5)], 2)
+    state.populate_states([(8, 3), (8, 4), (8, 5), (8, 6)], 1)
+    action = search_engine.next_move(state)
+    print(action)
+    result = [(8, 2), (8, 7)]
+
+    if action not in result:
+        print("failed basic_next_step_test1\n")
+        return 0
+    print("passed basic_next_step_test1\n")
+    return 1
+
+## prevent the other player from making a game winning move
+def basic_next_step_test2():
+    action = (7, 5)
+    state = State(action, None, 2, 1)
+    search_engine = SearchEngine()
+    state.populate_states([(7, 3), (7, 4)], 2)
+    state.populate_states([(8, 3), (8, 4)], 1)
+    action = search_engine.next_move(state)
+    print(action)
+    result = [(7, 2), (7, 6)]
+
+    if action not in result:
+        print("failed basic_next_step_test2\n")
+        return 0
+    print("passed basic_next_step_test2\n")
+    return 1
+
 def main():
     tests_passed = 0;
-    total_tests = 12;
+    total_tests = 14;
 
     passed = winner_test1()
     tests_passed += passed
@@ -206,6 +240,12 @@ def main():
     tests_passed += passed
 
     passed = basic_evaluation_test10()
+    tests_passed += passed
+
+    passed = basic_next_step_test1()
+    tests_passed += passed
+
+    passed = basic_next_step_test2()
     tests_passed += passed
     print("You passed %d/%d tests." % (tests_passed,total_tests))
 
