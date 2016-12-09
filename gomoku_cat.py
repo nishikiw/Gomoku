@@ -4,12 +4,11 @@ import random
 
 size = 15
 def initial_board(size):
-    board = []
-    for i in range(size):
-        row = []
-        for j in range(size):
-            row.append(0)
-        board.append(row)
+    board = {}
+    for i in range(1,size+1):
+        board[i] = {}
+        for j in range(1,size+1):
+            board[i][j] = 0
     return board
 
 
@@ -96,9 +95,9 @@ class State:
 
     def __str__(self):
         """Print the board of current state."""
-        s = "  0   1   2   3   4   5   6   7   8   9  10  11  12  13  14\n"
+        s = "  1   2   3   4   5   6   7   8   9  10  11  12  13  14  15\n"
         board = initial_board(15)
-        count = 0
+        count = 1
         for i in self.occupied:
             board[i[0]][i[1]] = self.occupied[i]
         space = ''
@@ -106,11 +105,11 @@ class State:
             space += ' '
         start = '---'.join(space)
         s += start+'\n|'
-        for row in board:
-            for e in row:
-                if e == 0:
+        for row in range(1,16):
+            for col in range(1,16):
+                if board[row][col] == 0:
                     s += '   |'
-                elif e == 1:
+                elif board[row][col] == 1:
                     s += ' O |'
                 else:
                     s += ' X |'
@@ -131,8 +130,6 @@ class SearchEngine:
         alpha, final_state, min_level, action_took = self.alpha_beta(cur_state, 3, 0, -math.inf, math.inf, math.inf)
         print("-----------------------------------------")
         print("value = "+str(alpha)+", min_level = "+str(min_level))
-        print(final_state.pre_state)
-        print(final_state)
         return action_took
 
 
@@ -187,7 +184,7 @@ def get_winner(state):
 def evaluate_state(state):
     """Input a state, return the value of the state."""
 
-    my_score = get_action_score(state.action[0], state.action[1], state.action_player, state.occupied)+1
+    my_score = get_action_score(state.action[0], state.action[1], state.action_player, state.occupied)
     other_score = get_action_score(state.action[0], state.action[1], state.player, state.occupied)
     
     return max(my_score, other_score)
@@ -205,29 +202,34 @@ def get_action_score(x, y, player, occupied):
     # Calculate the number of pieces in a roll on a vertical line, and how many sides are blocked.
     vertical_blocked_1 = 0
     vertical_blocked_2 = 0
-    if x < 5:
-        vertical_blocked_1 = 1
     for i in range(1, min(5, x)):
         if (x - i, y) in occupied:
             if occupied[(x - i, y)] == player:
                 vertical_num += 1
+                if x - i ==1:
+                    vertical_blocked_1 =1
             else:
                 vertical_blocked_1 = 1
                 break
         else:
             break
+    if x == 1:
+        vertical_blocked_1 = 1    
 
-    if size - x < 4:
-        vertical_blocked_2 = 1
     for i in range(1, min(5, size - x + 1)):
         if (x + i, y) in occupied:
+            
             if occupied[(x + i, y)] == player:
                 vertical_num += 1
+                if x + i==15:
+                    vertical_blocked_2 = 1 
             else:
                 vertical_blocked_2 = 1
                 break
         else:
             break
+    if x == 15:
+        vertical_blocked_2 = 1    
 
     if (vertical_num, vertical_blocked_1 + vertical_blocked_2) in dictionary:
         dictionary[(vertical_num, vertical_blocked_1 + vertical_blocked_2)] += 1
@@ -237,29 +239,32 @@ def get_action_score(x, y, player, occupied):
     # Calculate the number of pieces in a roll on a horizontal line, and how many sides are blocked.
     horizontal_blocked_1 = 0
     horizontal_blocked_2 = 0
-    if y < 5:
-        horizontal_blocked_1 = 1
     for i in range(1, min(5, y)):
         if (x, y - i) in occupied:
             if occupied[(x, y - i)] == player:
                 horizontal_num += 1
+                if y - i == 1:
+                    horizontal_blocked_1 = 1
             else:
                 horizontal_blocked_1 = 1
                 break
         else:
             break
-
-    if size - y < 4:
-        horizontal_blocked_2 = 1
+    if y == 1:
+        horizontal_blocked_1 = 1    
     for i in range(1, min(5, size - y + 1)):
         if (x, y + i) in occupied:
             if occupied[(x, y + i)] == player:
                 horizontal_num += 1
+                if y + i == 15:
+                    horizontal_blocked_2 = 1
             else:
                 horizontal_blocked_2 = 1
                 break
         else:
             break
+    if y == 15:
+        horizontal_blocked_1 = 1
 
     if (horizontal_num, horizontal_blocked_1 + horizontal_blocked_2) in dictionary:
         dictionary[(horizontal_num, horizontal_blocked_1 + horizontal_blocked_2)] += 1
@@ -269,29 +274,34 @@ def get_action_score(x, y, player, occupied):
     # Calculate the number of pieces in a roll through the diagonal, and how many sides are blocked.
     diagonal_blocked_1 = 0
     diagonal_blocked_2 = 0
-    if x < 5 or y < 5:
-        diagonal_blocked_1 = 1
     for i in range(1, min(5, x, y)):
         if (x - i, y - i) in occupied:
             if occupied[(x - i, y - i)] == player:
                 diagonal_num += 1
+                if x - i==1 or y-i==1:
+                    diagonal_blocked_1 = 1
             else:
                 diagonal_blocked_1 = 1
                 break
         else:
             break
+    if x == 1 or y == 1:
+        diagonal_blocked_1 = 1
 
-    if size - x < 4 or size - y < 4:
-        diagonal_blocked_2 = 1
+    
     for i in range(1, min(5, size - x + 1, size - y + 1)):
         if (x + i, y + i) in occupied:
             if occupied[(x + i, y + i)] == player:
                 diagonal_num += 1
+                if x + i == 15 or y + i==15:
+                    diagonal_blocked_2 = 1
             else:
                 diagonal_blocked_2 = 1
                 break
         else:
             break
+    if x == 15 or y < 15:
+        diagonal_blocked_2 = 1    
 
     if (diagonal_num, diagonal_blocked_1 + diagonal_blocked_2) in dictionary:
         dictionary[(diagonal_num, diagonal_blocked_1 + diagonal_blocked_2)] += 1
@@ -301,17 +311,19 @@ def get_action_score(x, y, player, occupied):
     # Calculate the number of pieces in a roll through the antidiagonal, and how many sides are blocked.
     antidiagonal_blocked_1 = 0
     antidiagonal_blocked_2 = 0
-    if size - x < 4 or y < 5:
-        antidiagonal_blocked_1 = 1
     for i in range(1, min(5, size - x + 1, y)):
         if (x + i, y - i) in occupied:
             if occupied[(x + i, y - i)] == player:
                 antidiagonal_num += 1
+                if x + i==1 or y - i==1:
+                    antidiagonal_blocked_1 = 1
             else:
                 antidiagonal_blocked_1 = 1
                 break
         else:
             break
+    if x == 1 or y == 1:
+        antidiagonal_blocked_1 = 1    
 
     if x < 5 or size - y < 4:
         antidiagonal_blocked_2 = 1
@@ -319,11 +331,15 @@ def get_action_score(x, y, player, occupied):
         if (x - i, y + i) in occupied:
             if occupied[(x - i, y + i)] == player:
                 antidiagonal_num += 1
+                if x - i==15 or y + i==15:
+                    antidiagonal_blocked_2 = 1
             else:
                 antidiagonal_blocked_2 = 1
                 break
         else:
             break
+    if x == 15 or y == 15:
+        antidiagonal_blocked_2 = 1    
 
     if (antidiagonal_num, antidiagonal_blocked_1 + antidiagonal_blocked_2) in dictionary:
         dictionary[(antidiagonal_num, antidiagonal_blocked_1 + antidiagonal_blocked_2)] += 1
@@ -336,15 +352,15 @@ def get_action_score(x, y, player, occupied):
     elif ((4, 0) in dictionary) or ((4, 1) in dictionary and dictionary[(4, 1)] > 1) or (
                     (4, 1) in dictionary and (3, 0) in dictionary):
         return 90
-    elif (3, 0) in dictionary and dictionary[(3, 0)] > 1:
+    elif ((3, 0) in dictionary) and (dictionary[(3, 0)] > 1):
         return 80
-    elif (3, 0) in dictionary and (3, 1) in dictionary:
+    elif ((3, 0) in dictionary) and ((3, 1) in dictionary):
         return 70
     elif (4, 1) in dictionary:
         return 60
     elif (3, 0) in dictionary:
         return 50
-    elif (2, 0) in dictionary and dictionary[(2, 0)] > 1:
+    elif ((2, 0) in dictionary) and (dictionary[(2, 0)] > 1):
         return 40
     elif (3, 1) in dictionary:
         return 30
