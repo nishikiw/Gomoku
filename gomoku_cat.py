@@ -46,9 +46,9 @@ class State:
                 self.player = 2
             else:
                 self.player = 1
-            self.available_moves = pre_state.available_moves.copy()
+            self.available_moves = set(pre_state.available_moves)
             self.available_moves.remove(action)
-            self.occupied = pre_state.occupied.copy()
+            self.occupied = dict(pre_state.occupied)
             self.occupied[action] = pre_state.player
             # Set the most top, bottom, left, and right index for the state.
             if action[1] < pre_state.top:
@@ -73,8 +73,6 @@ class State:
         else:
             self.value = -evaluate_state(self)
 
-        ## stored to test whether can populate the state.
-        self.pre_state = pre_state
     def successors(self):
         """Get successor states."""
 
@@ -117,17 +115,8 @@ class State:
                     s += ' X |'
             s+=str(count)+'\n'+start+'\n|'
             count += 1
-
+            
         return s[:len(s)-1]
-
-    def populate_states(self, list, player):
-        if self.pre_state is None:
-            for action in list:
-                self.occupied[action] = player
-                self.available_moves.remove(action)
-            return 1
-        print("you can only populate at the init state")
-        return 0
 
 
 class SearchEngine:
@@ -141,6 +130,8 @@ class SearchEngine:
         alpha, final_state, min_level, action_took = self.alpha_beta(cur_state, 3, 0, -math.inf, math.inf, math.inf)
         print("-----------------------------------------")
         print("value = "+str(alpha)+", min_level = "+str(min_level))
+        #print(final_state)
+        #print(final_state.pre_state)
         return action_took
 
 
@@ -148,7 +139,7 @@ class SearchEngine:
         """Alpha-beta pruning with limited depth. Leaves are evaluated by evaluation function."""
 
         # Evaluate current state.
-        if cur_level == limit or abs(cur_state.value) == 100:
+        if cur_level == limit or get_action_score(cur_state.action[0], cur_state.action[1], cur_state.action_player, cur_state.occupied)==100:
             return cur_state.value, cur_state, cur_level, None
         else:
             child_list = cur_state.successors()
@@ -182,7 +173,7 @@ class SearchEngine:
                 return beta, final_state, min_level, action_took
 
 def get_winner(state):
-    """If there is a winner for state, return the winner. Else if it's terminal state and no player won,
+    """If there is a winner for state, return the winner. Else if it's terminal state and no player,
     return 0. Else return -1."""
     state_val = get_action_score(state.action[0], state.action[1], state.action_player, state.occupied)
     if state_val == 100:
@@ -197,7 +188,7 @@ def evaluate_state(state):
 
     my_score = get_action_score(state.action[0], state.action[1], state.action_player, state.occupied)
     other_score = get_action_score(state.action[0], state.action[1], state.player, state.occupied)
-
+    
     return max(my_score, other_score)
 
 def get_action_score(x, y, player, occupied):
