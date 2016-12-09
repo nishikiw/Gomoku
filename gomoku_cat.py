@@ -74,6 +74,8 @@ class State:
         else:
             self.value = -evaluate_state(self)
 
+        ## stored to test whether can populate the state.
+        self.pre_state = pre_state
     def successors(self):
         """Get successor states."""
 
@@ -116,8 +118,17 @@ class State:
                     s += ' X |'
             s+=str(count)+'\n'+start+'\n|'
             count += 1
-            
+
         return s[:len(s)-1]
+
+    def populate_states(self, list, player):
+        if self.pre_state is None:
+            for action in list:
+                self.occupied[action] = player
+                self.available_moves.remove(action)
+            return 1
+        print("you can only populate at the init state")
+        return 0
 
 
 class SearchEngine:
@@ -174,7 +185,7 @@ class SearchEngine:
                 return beta, final_state, min_level, action_took
 
 def get_winner(state):
-    """If there is a winner for state, return the winner. Else if it's terminal state and no player,
+    """If there is a winner for state, return the winner. Else if it's terminal state and no player won,
     return 0. Else return -1."""
     state_val = get_action_score(state.action[0], state.action[1], state.action_player, state.occupied)
     if state_val == 100:
@@ -189,7 +200,7 @@ def evaluate_state(state):
 
     my_score = get_action_score(state.action[0], state.action[1], state.action_player, state.occupied)+1
     other_score = get_action_score(state.action[0], state.action[1], state.player, state.occupied)
-    
+
     return max(my_score, other_score)
 
 def get_action_score(x, y, player, occupied):
