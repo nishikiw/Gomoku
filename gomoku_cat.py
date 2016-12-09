@@ -3,6 +3,14 @@ import heapq
 import random
 
 size = 15
+def initial_board(size):
+    board = []
+    for i in range(size):
+        row = []
+        for j in range(size):
+            row.append(0)
+        board.append(row)
+    return board
 
 
 class State:
@@ -60,6 +68,7 @@ class State:
                 self.right = action[1]
             else:
                 self.right = pre_state.right
+        self.pre_state = pre_state
         if self.action_player == 1:
             self.value = evaluate_state(self)
         else:
@@ -85,27 +94,30 @@ class State:
                     heapq.heappush(children, (heap_key, child))
             return children
 
-    def print_board(self):
+    def __str__(self):
         """Print the board of current state."""
-        print("   1 2 3 4 5 6 7 8 9 0 1 2 3 4 5")
-        for i in range(size):
-            line = str((i+1)%10)+" |"
-            for j in range(size):
-                if (i + 1, j + 1) in self.occupied:
-                    player = self.occupied[(i + 1, j + 1)]
-                    if (i+1, j+1) == self.action:
-                        line += "\033[91m"
-                    if player == 1:
-                        line += "X"
-                    else:
-                        line += "O"
-                    if (i+1, j+1) == self.action:
-                        line += "\033[0m"
+        s = "  0   1   2   3   4   5   6   7   8   9  10  11  12  13  14\n"
+        board = initial_board(15)
+        count = 0
+        for i in self.occupied:
+            board[i[0]][i[1]] = self.occupied[i]
+        space = ''
+        for i in range(0, 16):
+            space += ' '
+        start = '---'.join(space)
+        s += start+'\n|'
+        for row in board:
+            for e in row:
+                if e == 0:
+                    s += '   |'
+                elif e == 1:
+                    s += ' O |'
                 else:
-                    line += " "
-                line += "|"
-            print(line)
-        print("")
+                    s += ' X |'
+            s+=str(count)+'\n'+start+'\n|'
+            count += 1
+            
+        return s[:len(s)-1]
 
 
 class SearchEngine:
@@ -116,10 +128,11 @@ class SearchEngine:
         AI is always player 1, so we only need to calculate for MAX.
         """
 
-        alpha, final_state, min_level, action_took = self.alpha_beta(cur_state, 2, 1, -math.inf, math.inf, math.inf)
+        alpha, final_state, min_level, action_took = self.alpha_beta(cur_state, 3, 0, -math.inf, math.inf, math.inf)
         print("-----------------------------------------")
         print("value = "+str(alpha)+", min_level = "+str(min_level))
-        final_state.print_board()
+        print(final_state.pre_state)
+        print(final_state)
         return action_took
 
 
@@ -174,8 +187,9 @@ def get_winner(state):
 def evaluate_state(state):
     """Input a state, return the value of the state."""
 
-    my_score = get_action_score(state.action[0], state.action[1], state.action_player, state.occupied)
+    my_score = get_action_score(state.action[0], state.action[1], state.action_player, state.occupied)+1
     other_score = get_action_score(state.action[0], state.action[1], state.player, state.occupied)
+    
     return max(my_score, other_score)
 
 def get_action_score(x, y, player, occupied):

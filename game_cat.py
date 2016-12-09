@@ -15,10 +15,10 @@ def main():
         action = (int(action_lst[0]), int(action_lst[1]))
         state = State(action, None, 2, 1)
     else:
-        action = (8, 8)
+        action = (7, 7)
         state = State(action, None, 1, 2)
 
-    state.print_board()
+    print(state)
     search_engine = SearchEngine()
     while get_winner(state) == -1:
         if state.player == 1:   # AI need to make next move
@@ -27,6 +27,7 @@ def main():
         else:   # Player need to make next move
             action_str = input("Please enter your move: ")
             action_lst = action_str.split()
+            print(action_lst)
             action = (int(action_lst[0]), int(action_lst[1]))
             while action not in state.available_moves:
                 action_str = input("NOT a valid move, please re-enter: ")
@@ -34,7 +35,7 @@ def main():
                 action = (int(action_lst[0]), int(action_lst[1]))
             state = State(action, state)
         print("score: "+str(evaluate_state(state)))
-        state.print_board()
+        print(state)
     winner = get_winner(state)
     if winner == 1:
         print("Game end. Please try again.")
