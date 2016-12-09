@@ -32,6 +32,7 @@ def winner_test2():
 
 #basic test to test functionality of the ai to recognize different patterns.
 ## only one move on the board.
+## 1 live
 def basic_evaluation_test1():
     action = (7, 7)
     state = State(action, None, 1, 2)
@@ -44,6 +45,7 @@ def basic_evaluation_test1():
 
 ## there is a winning move on the board near the action placed
 ## realize a high score
+## 5 live
 def basic_evaluation_test2():
     action = (7, 7)
     state = State(action, None, 1, 2)
@@ -71,6 +73,7 @@ def basic_evaluation_test3():
     return 1
 
 ## realize there is a connected 4 with no obstacles
+## 4 live
 def basic_evaluation_test4():
     action = (7, 7)
     state = State(action, None, 1, 2)
@@ -84,6 +87,7 @@ def basic_evaluation_test4():
     return 1
 
 ## realize there is a connected 4 with 1 obstables after placing action
+## 4 live 1 die
 def basic_evaluation_test5():
     action = (7, 7)
     state = State(action, None, 1, 2)
@@ -97,22 +101,76 @@ def basic_evaluation_test5():
     return 1
 
 ## TODO take a look at this test what should the score be ?
+## 3 live
 def basic_evaluation_test6():
     action = (7, 7)
     state = State(action, None, 1, 2)
     state.populate_states([(7, 5), (7, 6)], 1)
-    state.populate_states([(8, 6), (8, 7)], 2)
+    state.populate_states([(3, 6), (3, 7)], 2)
     score = evaluate_state(state)
-    print(score)
     if score != 80:
-        print("failed basic_evaluation_test5\n")
+        print("failed basic_evaluation_test6\n")
         return 0
-    print("passed basic_evaluation_test5\n")
+    print("passed basic_evaluation_test6\n")
+    return 1
+
+## TODO take a look at this test what should the score be ?
+## 3 live 1 die
+def basic_evaluation_test7():
+    action = (7, 7)
+    state = State(action, None, 1, 2)
+    state.populate_states([(7, 5), (7, 6)], 1)
+    state.populate_states([(8, 6), (8, 7), (7, 8)], 2)
+    score = evaluate_state(state)
+    if score != 30:
+        print("failed basic_evaluation_test7\n")
+        return 0
+    print("passed basic_evaluation_test7\n")
+    return 1
+
+## 2 live 1 die
+def basic_evaluation_test8():
+    action = (7, 7)
+    state = State(action, None, 1, 2)
+    state.populate_states([(7, 6)], 1)
+    state.populate_states([(7, 8)], 2)
+    score = evaluate_state(state)
+    if score != 10:
+        print("failed basic_evaluation_test8\n")
+        return 0
+    print("passed basic_evaluation_test8\n")
+    return 1
+
+## 2 live
+def basic_evaluation_test9():
+    action = (7, 7)
+    state = State(action, None, 1, 2)
+    state.populate_states([(7, 6)], 1)
+    state.populate_states([(5, 5)], 2)
+    score = evaluate_state(state)
+    if score != 20:
+        print("failed basic_evaluation_test9\n")
+        return 0
+    print("passed basic_evaluation_test9\n")
+    return 1
+
+def basic_evaluation_test10():
+    action = (7, 7)
+    state = State(action, None, 1, 2)
+    state.populate_states([(7, 5), (7, 6), (8, 7), (9, 7)], 1)
+    state.populate_states([(7, 8), (5, 6), (5, 7), (5, 8)], 2)
+    score = evaluate_state(state)
+    print(state)
+    print(score)
+    if score != 70:
+        print("failed basic_evaluation_test10\n")
+        return 0
+    print("passed basic_evaluation_test10\n")
     return 1
 
 def main():
     tests_passed = 0;
-    total_tests = 7;
+    total_tests = 12;
 
     passed = winner_test1()
     tests_passed += passed
@@ -136,6 +194,18 @@ def main():
     tests_passed += passed
 
     passed = basic_evaluation_test6()
+    tests_passed += passed
+
+    passed = basic_evaluation_test7()
+    tests_passed += passed
+
+    passed = basic_evaluation_test8()
+    tests_passed += passed
+
+    passed = basic_evaluation_test9()
+    tests_passed += passed
+
+    passed = basic_evaluation_test10()
     tests_passed += passed
     print("You passed %d/%d tests." % (tests_passed,total_tests))
 
