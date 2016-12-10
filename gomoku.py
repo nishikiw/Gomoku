@@ -3,7 +3,9 @@ import heapq
 import random
 
 size = 15
-def initial_board(size):
+
+
+def initial_board():
     board = {}
     for i in range(1,size+1):
         board[i] = {}
@@ -15,7 +17,7 @@ def initial_board(size):
 class State:
     """Define state of gomoku game."""
 
-    def __init__(self, action, pre_state, action_player=2, next_player=1):
+    def __init__(self, action, pre_state, action_player=2, next_player=1, has_color=True):
         """Initialization for creating a state.
         AI is player 1 (MAX) and human player is player 2 (MIN).
         self.player is the player who is going to make next move.
@@ -40,6 +42,8 @@ class State:
             self.bottom = action[0]
             self.left = action[1]
             self.right = action[1]
+            global use_color
+            use_color = has_color
         else:
             self.action_player = pre_state.player
             if pre_state.player == 1:
@@ -84,7 +88,7 @@ class State:
                     heap_key = -child.value-random.random()
                     heapq.heappush(children, (heap_key, child))
             return children
-        else:   #MIN HEAP:
+        else:   # MIN HEAP:
             children = []
             for (x, y) in self.available_moves:
                 if (y >= self.left - 3) and (y <= self.right + 3) and (x >= self.top - 3) and (x <= self.bottom + 3):
@@ -93,10 +97,20 @@ class State:
                     heapq.heappush(children, (heap_key, child))
             return children
 
+    def populate_states(self, list, player):
+        """Used for testing to generate a state."""
+        if self.pre_state is None:
+            for action in list:
+                self.occupied[action] = player
+                self.available_moves.remove(action)
+            return 1
+        print("you can only populate at the init state")
+        return 0
+
     def __str__(self):
         """Print the board of current state."""
         s = "  1   2   3   4   5   6   7   8   9  10  11  12  13  14  15\n"
-        board = initial_board(15)
+        board = initial_board()
         count = 1
         for i in self.occupied:
             board[i[0]][i[1]] = self.occupied[i]
@@ -107,12 +121,17 @@ class State:
         s += start+'\n|'
         for row in range(1,16):
             for col in range(1,16):
+                if use_color and (row, col) == self.action:
+                    s += '\033[91m'
                 if board[row][col] == 0:
                     s += '   |'
                 elif board[row][col] == 1:
                     s += ' O |'
                 else:
                     s += ' X |'
+                if use_color and (row, col) == self.action:
+                    s += '\033[0m'
+                    s += '\033[0m'
             s+=str(count)+'\n'+start+'\n|'
             count += 1
             
@@ -127,13 +146,12 @@ class SearchEngine:
         AI is always player 1, so we only need to calculate for MAX.
         """
 
-        alpha, final_state, min_level, action_took = self.alpha_beta(cur_state, 3, 0, -math.inf, math.inf, math.inf)
+        alpha, final_state, min_level, action_took = self.alpha_beta(cur_state, 1, 0, -math.inf, math.inf, math.inf)
         print("-----------------------------------------")
         print("value = "+str(alpha)+", min_level = "+str(min_level))
         #print(final_state)
         #print(final_state.pre_state)
         return action_took
-
 
     def alpha_beta(self, cur_state, limit, cur_level, alpha, beta, min_level):
         """Alpha-beta pruning with limited depth. Leaves are evaluated by evaluation function."""
@@ -172,8 +190,9 @@ class SearchEngine:
                         break
                 return beta, final_state, min_level, action_took
 
+
 def get_winner(state):
-    """If there is a winner for state, return the winner. Else if it's terminal state and no player,
+    """If there is a winner for state, return the winner. Else if it's terminal state and no player won,
     return 0. Else return -1."""
     state_val = get_action_score(state.action[0], state.action[1], state.action_player, state.occupied)
     if state_val == 100:
@@ -183,6 +202,7 @@ def get_winner(state):
     else:
         return -1
 
+
 def evaluate_state(state):
     """Input a state, return the value of the state."""
 
@@ -190,6 +210,7 @@ def evaluate_state(state):
     other_score = get_action_score(state.action[0], state.action[1], state.player, state.occupied)
     
     return max(my_score, other_score)
+
 
 def get_action_score(x, y, player, occupied):
     """Input a state, return the value of the state."""
