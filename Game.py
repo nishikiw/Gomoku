@@ -32,7 +32,7 @@ def main():
     while get_winner(state) == -1:
         if state.player == 1:   # AI need to make next move
             action = search_engine.next_move(state)
-            print(state.value)
+            #print(state.value)
             state = State(action, state)
         else:   # Player need to make next move
             action_str = input("Please enter your move: ")

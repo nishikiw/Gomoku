@@ -55,19 +55,19 @@ class State:
             self.occupied = dict(pre_state.occupied)
             self.occupied[action] = pre_state.player
             # Set the most top, bottom, left, and right index for the state.
-            if action[1] < pre_state.top:
+            if action[0] < pre_state.top:
                 self.top = action[0]
             else:
                 self.top = pre_state.top
-            if action[1] > pre_state.bottom:
+            if action[0] > pre_state.bottom:
                 self.bottom = action[0]
             else:
                 self.bottom = pre_state.bottom
-            if action[0] < pre_state.left:
+            if action[1] < pre_state.left:
                 self.left = action[1]
             else:
                 self.left = pre_state.left
-            if action[0] > pre_state.right:
+            if action[1] > pre_state.right:
                 self.right = action[1]
             else:
                 self.right = pre_state.right
@@ -134,7 +134,9 @@ class State:
                     s += '\033[0m'
             s+=str(count)+'\n'+start+'\n|'
             count += 1
-            
+
+        s = s[:len(s)-1]
+        s += "\n*****************************************************************************"
         return s[:len(s)-1]
 
 
@@ -147,9 +149,9 @@ class SearchEngine:
         """
 
         alpha, final_state, min_level, action_took = self.alpha_beta(cur_state, 1, 0, -math.inf, math.inf, math.inf)
-        print("-----------------------------------------")
-        print("value = "+str(alpha)+", min_level = "+str(min_level))
-        #print(final_state)
+        #print("-----------------------------------------")
+        #print("value = "+str(alpha)+", min_level = "+str(min_level))
+        #print("previous: top="+str(cur_state.top)+", bottom="+str(cur_state.bottom)+", left="+str(cur_state.left)+", right="+str(cur_state.right))
         #print(final_state.pre_state)
         return action_took
 
@@ -375,11 +377,11 @@ def get_action_score(x, y, player, occupied):
     elif ((4, 0) in dictionary) or ((4, 1) in dictionary and dictionary[(4, 1)] > 1) or (
                     (4, 1) in dictionary and (3, 0) in dictionary):
         return 90
-    elif ((3, 0) in dictionary) and (dictionary[(3, 0)] > 1):
-        return 80
-    elif ((3, 0) in dictionary) and ((3, 1) in dictionary):
-        return 70
     elif (4, 1) in dictionary:
+        return 80
+    elif ((3, 0) in dictionary) and (dictionary[(3, 0)] > 1):
+        return 70
+    elif ((3, 0) in dictionary) and ((3, 1) in dictionary):
         return 60
     elif (3, 0) in dictionary:
         return 50
