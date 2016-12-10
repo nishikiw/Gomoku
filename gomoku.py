@@ -148,7 +148,7 @@ class SearchEngine:
         AI is always player 1, so we only need to calculate for MAX.
         """
 
-        alpha, final_state, min_level, action_took = self.alpha_beta(cur_state, 1, 0, -math.inf, math.inf, math.inf)
+        alpha, final_state, min_level, action_took = self.alpha_beta(cur_state, 2, 0, -math.inf, math.inf, math.inf)
         #print("-----------------------------------------")
         #print("value = "+str(alpha)+", min_level = "+str(min_level))
         #print("previous: top="+str(cur_state.top)+", bottom="+str(cur_state.bottom)+", left="+str(cur_state.left)+", right="+str(cur_state.right))
