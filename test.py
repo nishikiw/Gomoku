@@ -101,7 +101,7 @@ def basic_evaluation_test5():
     state.populate_states([(7, 4), (7, 5), (7, 6)], 1)
     state.populate_states([(7, 8), (8, 4), (8, 5)], 2)
     score = evaluate_state(state)
-    if score != 60:
+    if score != 80:
         print("failed basic_evaluation_test5\n")
         return 0
     print("passed basic_evaluation_test5\n")
@@ -172,7 +172,7 @@ def basic_evaluation_test10():
     state.populate_states([(7, 5), (7, 6), (8, 7), (9, 7)], 1)
     state.populate_states([(7, 8), (5, 6), (5, 7), (5, 8)], 2)
     score = evaluate_state(state)
-    if score != 70:
+    if score != 60:
         print("failed basic_evaluation_test10\n")
         return 0
     print("passed basic_evaluation_test10\n")
