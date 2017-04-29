@@ -188,7 +188,6 @@ def basic_next_step_test1():
     state.populate_states([(8, 3), (8, 4), (8, 5), (8, 6)], 1)
     action = search_engine.next_move(state)
     result = [(8, 2), (8, 7)]
-    print(state)
 
     if action not in result:
         print("failed basic_next_step_test1\n")
